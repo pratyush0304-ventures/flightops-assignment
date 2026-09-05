@@ -37,6 +37,7 @@ This project implements a **FlightOps** airline operations assistant using plain
 | `reflector.py` | Post-answer LLM step that critiques tool usage, missing info, and confidence. |
 | `app.py` | Part 3 smoke tests — calls every tool directly with print output (no LLM used). |
 | `main.py` | CLI entry point orchestrating "Plan → Agent → Reflection" with presentable console output. |
+| `memory.py` | JSON file store for `remember` / `recall`. Loaded into the system prompt at startup. |
 | `requirements.txt` | Minimal dependencies: `MODEL`, `python-dotenv`. |
 
 ----------------------------------------------------------------------
@@ -106,6 +107,21 @@ python main.py "What's the weather at HYD and CHN?"
 ```
 
 The default query (`Is AI203 likely to depart on time?`) is designed to require **3+ tools**: flight status, weather at DEL, and maintenance history for VT-EXA.
+
+### Memory (Assignment 05 Part 1)
+
+Facts live in `skyvault_memory.json` next to the Python files. `remember(key, value, source)` writes a fact; `recall(query)` searches keys and values. On every agent run, `working_context()` is appended to the system prompt so SkyVault does not wait to be asked.
+
+**Conflict rule:** last write wins on the same key (keys are compared case-insensitively). The old value is not kept as a second live fact; it is only recorded as `previous_value` on that record so the overwrite is visible. Example: `preferred_terminal=T2` then `preferred_terminal=T3` leaves a single fact (`T3`).
+
+Restart demo (works in `--demo` as well):
+
+```powershell
+python main.py --demo "I usually work Terminal 2, remember that."
+python main.py --demo "Find me an open gate."
+```
+
+The second process should pick T2 from disk and call `find_available_gate` with it.
 
 --------------------------------------------------------------------------
 

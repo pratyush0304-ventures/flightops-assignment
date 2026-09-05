@@ -11,6 +11,8 @@ from tools import (
     get_weather,
     lookup_aircraft,
     maintenance_history,
+    recall,
+    remember,
     search_passenger,
 )
 
@@ -44,6 +46,17 @@ def run_tool_tests() -> None:
     _print_result("lookup_aircraft(A380)", lookup_aircraft("A380"))
 
     _print_result("get_departure_airport(AI203)", get_departure_airport("AI203"))
+
+    _print_result(
+        "remember(preferred_terminal, T2)",
+        remember("preferred_terminal", "T2", "smoke_test"),
+    )
+    _print_result("recall(terminal)", recall("terminal"))
+    _print_result(
+        "remember conflict (same key, T3)",
+        remember("preferred_terminal", "T3", "smoke_test"),
+    )
+    _print_result("recall after overwrite", recall("preferred_terminal"))
 
     print("\n" + "=" * 50)
     print("All tool smoke tests completed.")

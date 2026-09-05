@@ -27,7 +27,7 @@ def generate_plan(user_question: str, *, demo: bool = False) -> dict[str, str]:
                 f"Question: {user_question}\n\n"
                 "Available tools: get_flight_status, search_passenger, "
                 "maintenance_history, find_available_gate, get_weather, "
-                "lookup_aircraft, get_departure_airport.\n"
+                "lookup_aircraft, get_departure_airport, remember, recall.\n"
                 "Format your response as:\nGOAL: ...\nPLAN:\n1. ...\n2. ..."
             ),
         },
