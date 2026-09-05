@@ -37,6 +37,7 @@ This project implements a **FlightOps** airline operations assistant using plain
 | `reflector.py` | Post-answer LLM step that critiques tool usage, missing info, and confidence. |
 | `app.py` | Part 3 smoke tests — calls every tool directly with print output (no LLM used). |
 | `main.py` | CLI entry point orchestrating "Plan → Agent → Reflection" with presentable console output. |
+| `memory.py` | JSON file store for `remember` / `recall`. Loaded into the system prompt at startup. |
 | `requirements.txt` | Minimal dependencies: `MODEL`, `python-dotenv`. |
 
 ----------------------------------------------------------------------
@@ -64,6 +65,28 @@ ollama serve
 ```
 
 Keep Ollama running in the background (on Windows it usually starts automatically).
+
+### VS Code / Windows: the Downloads `app.py` error
+
+If the traceback still says Python can't open
+
+`C:\Users\Admin\Downloads\flightops-assignment-cursor-skyvault-memory-238c\app.py`
+
+then the **Run button is still using that folder**. `tools.py` living under `C:\Users\Admin\Projects\Skyvault` does not change that. Close the Downloads window entirely.
+
+Do this once:
+
+1. Close VS Code.
+2. In File Explorer go to `C:\Users\Admin\Projects\Skyvault`.
+3. Confirm `app.py`, `memory.py`, and `tools.py` are **in that same folder** (not only `tools.py`). If `app.py` is missing, copy it from this repo — the smoke-test file is `app.py` at the project root.
+4. Double-click `run.bat` in that folder (added in this branch). It `cd`s to its own directory and then runs `app.py`.
+5. Re-open VS Code with **File → Open Folder** on `C:\Users\Admin\Projects\Skyvault` only.
+6. `Ctrl+Shift+P` → **Python: Select Interpreter** → pick  
+   `C:\Users\Admin\Projects\Skyvault\.venv\Scripts\python.exe`  
+   Do **not** pick the Downloads `.venv`.
+7. Open `run_local.py` and run that file (not a phantom `app.py` from Downloads).
+
+The interpreter path is printed at the top of `run_local.py`. If it still starts with `Downloads\flightops-assignment-...`, the wrong environment is selected.
 
 ### Project setup
 
@@ -106,6 +129,27 @@ python main.py "What's the weather at HYD and CHN?"
 ```
 
 The default query (`Is AI203 likely to depart on time?`) is designed to require **3+ tools**: flight status, weather at DEL, and maintenance history for VT-EXA.
+
+### Memory (Assignment 05 Part 1)
+
+Facts live in `skyvault_memory.json` next to the Python files. `remember(key, value, source)` writes a fact; `recall(query)` searches keys and values. On every agent run, `working_context()` is appended to the system prompt so SkyVault does not wait to be asked.
+
+**Conflict rule:** last write wins on the same key (keys are compared case-insensitively). The old value is not kept as a second live fact; it is only recorded as `previous_value` on that record so the overwrite is visible. Example: `preferred_terminal=T2` then `preferred_terminal=T3` leaves a single fact (`T3`).
+
+Restart demo — run these from the folder that contains `memory.py` (not a different SkyVault copy):
+
+```powershell
+python memory.py
+```
+
+Or call the functions directly (do not import `execute_tool` unless your `tools.py` defines it):
+
+```powershell
+python -c "from memory import remember; print(remember('preferred_terminal', 'T2', 'user'))"
+python -c "from memory import recall; print(recall('terminal'))"
+```
+
+`python main.py --demo "..."` still needs the LLM client import in `llm_client.py` to succeed.
 
 --------------------------------------------------------------------------
 

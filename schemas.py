@@ -157,6 +157,60 @@ LOOKUP_AIRCRAFT_SCHEMA: dict[str, Any] = {
     },
 }
 
+REMEMBER_SCHEMA: dict[str, Any] = {
+    "type": "function",
+    "function": {
+        "name": "remember",
+        "description": (
+            "Store a durable fact about the user or operation so it survives a restart. "
+            "Use when the user asks you to remember something (terminal preference, "
+            "maintenance notes, etc.). Same key overwrites the previous value."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Short fact name, e.g. preferred_terminal.",
+                },
+                "value": {
+                    "type": "string",
+                    "description": (
+                        "Value to store. For terminals use T2/T3 (not 'Terminal 2') "
+                        "so find_available_gate can reuse it."
+                    ),
+                },
+                "source": {
+                    "type": "string",
+                    "description": "Who stated the fact, e.g. gate_agent or user.",
+                },
+            },
+            "required": ["key", "value", "source"],
+        },
+    },
+}
+
+RECALL_SCHEMA: dict[str, Any] = {
+    "type": "function",
+    "function": {
+        "name": "recall",
+        "description": (
+            "Search persisted memory by keyword. Use mid-conversation when a stored "
+            "preference or note is needed and is not already in the system prompt."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Substring to match against stored keys or values.",
+                }
+            },
+            "required": ["query"],
+        },
+    },
+}
+
 GET_DEPARTURE_AIRPORT_SCHEMA: dict[str, Any] = {
     "type": "function",
     "function": {
@@ -186,6 +240,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
     GET_WEATHER_SCHEMA,
     LOOKUP_AIRCRAFT_SCHEMA,
     GET_DEPARTURE_AIRPORT_SCHEMA,
+    REMEMBER_SCHEMA,
+    RECALL_SCHEMA,
 ]
 
 LAZY_TOOL_SCHEMAS: list[dict[str, Any]] = [
@@ -196,6 +252,8 @@ LAZY_TOOL_SCHEMAS: list[dict[str, Any]] = [
     GET_WEATHER_SCHEMA,
     LOOKUP_AIRCRAFT_SCHEMA,
     GET_DEPARTURE_AIRPORT_SCHEMA,
+    REMEMBER_SCHEMA,
+    RECALL_SCHEMA,
 ]
 
 CAREFUL_TOOL_SCHEMAS: list[dict[str, Any]] = TOOL_SCHEMAS

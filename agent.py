@@ -7,14 +7,27 @@ from typing import Any
 
 import config
 from llm_client import chat_completion, message_to_dict, parse_tool_arguments
+from memory import working_context
 from schemas import TOOL_SCHEMAS
 from tools import execute_tool
 
-SYSTEM_PROMPT = """You are FlightOps, an airline operations assistant.
+SYSTEM_PROMPT = """You are FlightOps / SkyVault, an airline operations assistant.
 Use the provided tools to gather facts before answering.
 Combine flight status, weather, maintenance, and gate data when assessing delays.
 If a tool returns status "error", explain the limitation and continue with available data.
-Be concise and operational in tone."""
+Be concise and operational in tone.
+Facts listed under known memory are already stored from earlier sessions — use them
+without asking the user to repeat themselves. Call remember when the user states a
+new durable fact. If they restated a fact with a new value, call remember with the
+same key so the old value is overwritten. Call recall if you need to search memory
+mid-conversation."""
+
+
+def _build_system_prompt() -> str:
+    ctx = working_context()
+    if not ctx:
+        return SYSTEM_PROMPT
+    return SYSTEM_PROMPT + "\n\n" + ctx
 
 
 def run_agent(
@@ -30,7 +43,7 @@ def run_agent(
     """
     schemas = tool_schemas or TOOL_SCHEMAS
     messages: list[dict[str, Any]] = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": _build_system_prompt()},
         {"role": "user", "content": user_question},
     ]
     audtl: list[dict[str, Any]] = []  #tool call audit log
@@ -97,6 +110,48 @@ def _print_tool_log(audtl: list[dict[str, Any]]) -> None:
 def run_agent_demo(user_question: str) -> dict[str, Any]:
     """Deterministic demo path when no API key is configured."""
     print("  [Demo mode] Simulating multi-tool agent run without LLM.")
+    q = user_question.lower()
+
+    # Memory path used for the Part 1 restart demo (no LLM needed).
+    if "remember" in q:
+        value = "T2"
+        if "t3" in q or "terminal 3" in q:
+            value = "T3"
+        result = execute_tool(
+            "remember",
+            {"key": "preferred_terminal", "value": value, "source": "user"},
+        )
+        audtl = [{"step": 1, "tool": "remember", "arguments": {"key": "preferred_terminal", "value": value, "source": "user"}, "result": result}]
+        print(f"  [Tool 1] remember({{key: preferred_terminal, value: {value}}})")
+        _print_tool_log(audtl)
+        return {
+            "answer": f"Got it -- I'll keep that in mind ({value}).",
+            "tool_call_log": audtl,
+            "messages": [],
+        }
+
+    if "gate" in q or "open gate" in q:
+        recalled = execute_tool("recall", {"query": "preferred_terminal"})
+        terminal = "T3"
+        matches = recalled.get("matches") or []
+        if matches:
+            terminal = str(matches[0].get("value") or terminal)
+        gate_result = execute_tool("find_available_gate", {"terminal": terminal})
+        audtl = [
+            {"step": 1, "tool": "recall", "arguments": {"query": "preferred_terminal"}, "result": recalled},
+            {"step": 2, "tool": "find_available_gate", "arguments": {"terminal": terminal}, "result": gate_result},
+        ]
+        rec = gate_result.get("recommended") or {}
+        gate_id = rec.get("gate", "none")
+        print(f"  [Tool 1] recall({{query: preferred_terminal}})")
+        print(f"  [Tool 2] find_available_gate({{terminal: {terminal}}})")
+        _print_tool_log(audtl)
+        return {
+            "answer": f"Gate {gate_id} is open in {terminal}.",
+            "tool_call_log": audtl,
+            "messages": [],
+        }
+
     steps = [
         ("get_flight_status", {"flight_number": "AI203"}),
         ("get_weather", {"airport": "DEL"}),

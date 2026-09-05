@@ -23,6 +23,8 @@ EXAMPLE_QUERIES = [
     "What maintenance was done on VT-EXA?",
     "Is there an available gate at T3?",
     "What's the weather at DEL and BOM?",
+    "I usually work Terminal 2, remember that.",
+    "Find me an open gate.",
 ]
 
 

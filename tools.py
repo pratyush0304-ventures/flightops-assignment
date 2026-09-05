@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from data import AIRCRAFT, AIRCRAFT_TYPES, FLIGHTS, GATES, MAINTENANCE, PASSENGERS, WEATHER
+from memory import recall, remember
 
 
 def _error(message: str, **extra: Any) -> dict[str, Any]:
@@ -123,6 +124,8 @@ TOOL_REGISTRY: dict[str, Any] = {
     "get_weather": get_weather,
     "lookup_aircraft": lookup_aircraft,
     "get_departure_airport": get_departure_airport,
+    "remember": remember,
+    "recall": recall,
 }
 
 
