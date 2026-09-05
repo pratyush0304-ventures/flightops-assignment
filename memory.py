@@ -127,3 +127,24 @@ def working_context() -> str:
             line += f" [replaced {rec['previous_value']}]"
         lines.append(line)
     return "Known facts from earlier sessions:\n" + "\n".join(lines)
+
+
+if __name__ == "__main__":
+    # Run from the folder that contains this file:  python memory.py
+    print("Session 1 — store preferred terminal")
+    print(remember("preferred_terminal", "T2", "user"))
+    print()
+    print("On disk:", MEMORY_FILE)
+    print(working_context() or "(empty)")
+    print()
+    print("Session 2 — recall after reload")
+    found = recall("terminal")
+    print(found)
+    if found.get("matches"):
+        terminal = found["matches"][0]["value"]
+        try:
+            from tools import find_available_gate
+
+            print("find_available_gate:", find_available_gate(terminal))
+        except ImportError:
+            print("tools.find_available_gate not available; recalled terminal =", terminal)

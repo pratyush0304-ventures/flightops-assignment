@@ -114,14 +114,20 @@ Facts live in `skyvault_memory.json` next to the Python files. `remember(key, va
 
 **Conflict rule:** last write wins on the same key (keys are compared case-insensitively). The old value is not kept as a second live fact; it is only recorded as `previous_value` on that record so the overwrite is visible. Example: `preferred_terminal=T2` then `preferred_terminal=T3` leaves a single fact (`T3`).
 
-Restart demo (works in `--demo` as well):
+Restart demo — run these from the folder that contains `memory.py` (not a different SkyVault copy):
 
 ```powershell
-python main.py --demo "I usually work Terminal 2, remember that."
-python main.py --demo "Find me an open gate."
+python memory.py
 ```
 
-The second process should pick T2 from disk and call `find_available_gate` with it.
+Or call the functions directly (do not import `execute_tool` unless your `tools.py` defines it):
+
+```powershell
+python -c "from memory import remember; print(remember('preferred_terminal', 'T2', 'user'))"
+python -c "from memory import recall; print(recall('terminal'))"
+```
+
+`python main.py --demo "..."` still needs the LLM client import in `llm_client.py` to succeed.
 
 --------------------------------------------------------------------------
 
