@@ -66,6 +66,28 @@ ollama serve
 
 Keep Ollama running in the background (on Windows it usually starts automatically).
 
+### VS Code / Windows: the Downloads `app.py` error
+
+If the traceback still says Python can't open
+
+`C:\Users\Admin\Downloads\flightops-assignment-cursor-skyvault-memory-238c\app.py`
+
+then the **Run button is still using that folder**. `tools.py` living under `C:\Users\Admin\Projects\Skyvault` does not change that. Close the Downloads window entirely.
+
+Do this once:
+
+1. Close VS Code.
+2. In File Explorer go to `C:\Users\Admin\Projects\Skyvault`.
+3. Confirm `app.py`, `memory.py`, and `tools.py` are **in that same folder** (not only `tools.py`). If `app.py` is missing, copy it from this repo — the smoke-test file is `app.py` at the project root.
+4. Double-click `run.bat` in that folder (added in this branch). It `cd`s to its own directory and then runs `app.py`.
+5. Re-open VS Code with **File → Open Folder** on `C:\Users\Admin\Projects\Skyvault` only.
+6. `Ctrl+Shift+P` → **Python: Select Interpreter** → pick  
+   `C:\Users\Admin\Projects\Skyvault\.venv\Scripts\python.exe`  
+   Do **not** pick the Downloads `.venv`.
+7. Open `run_local.py` and run that file (not a phantom `app.py` from Downloads).
+
+The interpreter path is printed at the top of `run_local.py`. If it still starts with `Downloads\flightops-assignment-...`, the wrong environment is selected.
+
 ### Project setup
 
 ```powershell
